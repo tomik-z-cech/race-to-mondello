@@ -57,4 +57,16 @@ body {
     justify-content: flex-end;
     margin-bottom: 1rem;
   }
+  #sort {
+    background-color: #2c2c2c; /* dark gray */
+    color: #eee; /* light text */
+    border: 1px solid #555;
+  }
   
+  #sort:focus {
+    background-color: #3a3a3a;
+    color: #fff;
+    border-color: #888;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(100, 100, 100, 0.5);
+  }
