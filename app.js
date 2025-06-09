@@ -118,14 +118,14 @@ function renderStats(stats, lastUpdated) {
             </div>
             <!-- Left and Right columns -->
             <div class="col-6 text-center">
-                <p><strong>Lowest Spend:</strong> €${garage.lowest.toFixed(2)} (Day ${garage.lowestDay})</p>
-                <p><strong>Highest Spend:</strong> €${garage.highest.toFixed(2)} (Day ${garage.highestDay})</p>
-                <p><strong>Average Spend/Day:</strong> €${garage.average.toFixed(2)}</p>
+                <p><strong>Lowest Spend:</strong><br> €${garage.lowest.toFixed(2)} (Day ${garage.lowestDay})</p>
+                <p><strong>Highest Spend:</strong><br> €${garage.highest.toFixed(2)} (Day ${garage.highestDay})</p>
+                <p><strong>Average Spend/Day:</strong><br> €${garage.average.toFixed(2)}</p>
             </div>
             <div class="col-6 text-center">
-                <p><strong>Total Spend:</strong> €${garage.total.toFixed(2)}</p>
-                <p><strong>Percentage of Target:</strong> ${garage.progressPercent.toFixed(2)}%</p>
-                <p><strong>Days Left to Target:</strong> ${garage.estDaysToTarget}</p>
+                <p><strong>Total Spend:</strong><br> €${garage.total.toFixed(2)}</p>
+                <p><strong>Percentage of Target:</strong><br> ${garage.progressPercent.toFixed(2)}%</p>
+                <p><strong>Days Left to Target:</strong><br> ${garage.estDaysToTarget}</p>
             </div>
             <!-- Race car progress bar with start and finish icons -->
             <div class="col-12 mt-3 position-relative" style="height: 60px;">
