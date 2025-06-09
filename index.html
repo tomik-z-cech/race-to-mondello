@@ -15,8 +15,18 @@
             <h1 class="display-5 fw-bold">🏎️<br> Mondello Challenge <br> June 2025 <br> 🏎️</h1>
             <p id="last-updated" class="text-muted">Last updated: loading...</p>
         </header>
+        <br>
         <div class="d-flex justify-content-end mb-3 w-100 w-md-50 mx-auto mx-md-0">
-            <select id="sort" class="form-select w-100">
+            <select id="branch" class="form-select bg-dark text-white w-100">
+                <option value="mondello_june_limerick.json">Limerick</option>
+                <option value="mondello_june_galway.json">Galway</option>
+                <option value="mondello_june_ennis.json">Ennis</option>
+                <option value="mondello_june_nenagh.json">Nenagh</option>
+            </select>
+        </div>
+        <br>
+        <div class="d-flex justify-content-end mb-3 w-100 w-md-50 mx-auto mx-md-0">
+            <select id="sort" class="form-select bg-dark text-white w-100">
                 <option value="percent-desc">% of Target - High to Low (Default)</option>
                 <option value="percent-asc">% of Target - Low to High</option>
                 <option value="average-desc">Average Spend - High to Low</option>
