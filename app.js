@@ -24,7 +24,7 @@ branchSelect.addEventListener('change', () => {
 });
 
 async function loadData(filename) {
-    const response = await fetch(filename);
+    const response = await fetch(`data/${filename}`);
     if (!response.ok) {
         throw new Error(`Failed to load: ${filename}`);
     }
@@ -161,29 +161,34 @@ function loadAndRender(filename) {
     showSpinner(true);
     showError('');
 
-    loadData(filename)
-        .then(loadedData => {
-            data = loadedData;
-            currentStats = calculateStats(data);
+    const MIN_LOAD_TIME = 1000; // Minimum 1 second delay
+    const startTime = Date.now();
 
-            // Sort by default
-            document.getElementById('sort').value = 'percent-desc';
-            currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
+    const fetchData = loadData(filename);
+    const delay = new Promise(resolve => setTimeout(resolve, MIN_LOAD_TIME));
 
-            renderStats(currentStats, data.lastUpdated);
-        })
-        .catch(err => {
-            console.error(err);
-            showError('Data not found.');
-            document.getElementById('garage-stats').innerHTML = '';
-            document.getElementById('last-updated').textContent = '';
+    Promise.allSettled([fetchData, delay])
+        .then(([dataResult]) => {
+            if (dataResult.status === 'fulfilled') {
+                data = dataResult.value;
+                currentStats = calculateStats(data);
+
+                document.getElementById('sort').value = 'percent-desc';
+                currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
+
+                renderStats(currentStats, data.lastUpdated);
+            } else {
+                console.error(dataResult.reason);
+                showError('Data not found.');
+                document.getElementById('garage-stats').innerHTML = '';
+                document.getElementById('last-updated').textContent = '';
+            }
         })
         .finally(() => {
             showSpinner(false);
         });
 }
 
-// Initial load
 document.addEventListener('DOMContentLoaded', () => {
     const initialBranch = branchSelect.value;
     loadAndRender(initialBranch);
