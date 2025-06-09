@@ -175,11 +175,12 @@ function loadAndRender(filename) {
 
                 document.getElementById('sort').value = 'percent-desc';
                 currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
-
+                document.getElementById('sort').style.display = 'block';
                 renderStats(currentStats, data.lastUpdated);
             } else {
                 console.error(dataResult.reason);
-                showError('Data not found.');
+                showError('The data file was not found');
+                document.getElementById('sort').style.display = 'none';
                 document.getElementById('garage-stats').innerHTML = '';
                 document.getElementById('last-updated').textContent = '';
             }
@@ -191,5 +192,6 @@ function loadAndRender(filename) {
 
 document.addEventListener('DOMContentLoaded', () => {
     const initialBranch = branchSelect.value;
+    document.getElementById('sort').style.display = 'none';
     loadAndRender(initialBranch);
 });
