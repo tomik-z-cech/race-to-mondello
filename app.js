@@ -157,37 +157,45 @@ function applySortAndRender(sortValue) {
     renderStats(sortedStats, data.lastUpdated);
 }
 
-function loadAndRender(filename) {
+let currentLoadId = 0; // global tracker
+
+async function loadAndRender(filename) {
+    const loadId = ++currentLoadId;  // new load id for this call
+
     showSpinner(true);
     showError('');
+    document.getElementById('sort').style.display = 'none'; // hide sort by default on new load
 
-    const MIN_LOAD_TIME = 1000; // Minimum 1 second delay
-    const startTime = Date.now();
+    const delay = new Promise(resolve => setTimeout(resolve, 1000));
+    const fetchPromise = loadData(filename);
 
-    const fetchData = loadData(filename);
-    const delay = new Promise(resolve => setTimeout(resolve, MIN_LOAD_TIME));
+    const results = await Promise.allSettled([fetchPromise, delay]);
 
-    Promise.allSettled([fetchData, delay])
-        .then(([dataResult]) => {
-            if (dataResult.status === 'fulfilled') {
-                data = dataResult.value;
-                currentStats = calculateStats(data);
+    if (loadId !== currentLoadId) {
+        // A newer load started, so ignore this result
+        return;
+    }
 
-                document.getElementById('sort').value = 'percent-desc';
-                currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
-                document.getElementById('sort').style.display = 'block';
-                renderStats(currentStats, data.lastUpdated);
-            } else {
-                console.error(dataResult.reason);
-                showError('The data file was not found');
-                document.getElementById('sort').style.display = 'none';
-                document.getElementById('garage-stats').innerHTML = '';
-                document.getElementById('last-updated').textContent = '';
-            }
-        })
-        .finally(() => {
-            showSpinner(false);
-        });
+    const fetchResult = results[0];
+
+    if (fetchResult.status === 'fulfilled') {
+        data = fetchResult.value;
+        currentStats = calculateStats(data);
+
+        currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
+        document.getElementById('sort').value = 'percent-desc';
+        renderStats(currentStats, data.lastUpdated);
+        document.getElementById('sort').style.display = 'block';
+        showError('');
+    } else {
+        console.error(fetchResult.reason);
+        showError('Data not found.');
+        document.getElementById('garage-stats').innerHTML = '';
+        document.getElementById('last-updated').textContent = '';
+        document.getElementById('sort').style.display = 'none';
+    }
+
+    showSpinner(false);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
