@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mondello Challenge - Limerick</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="icon" href="assets\favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-dark text-white">
+    <div class="container py-5">
+        <header class="text-center mb-5">
+            <h1 class="display-5 fw-bold">🏎️<br> Mondello Challenge <br> June 2025 <br> 🏎️</h1>
+            <p id="last-updated" class="text-muted">Last updated: loading...</p>
+        </header>
+        <br>
+        <div class="d-flex justify-content-end mb-3 w-100 w-md-50 mx-auto mx-md-0">
+            <select id="branch" class="form-select bg-dark text-white w-100">
+                <option value="mondello_june_carlow.json">Carlow</option>
+                <option value="mondello_june_castlebar.json">Castlebar</option>
+                <option value="mondello_june_cavan.json">Cavan</option>
+                <option value="mondello_june_clonmel.json">Clonmel</option>
+                <option value="mondello_june_pouladuff.json">Cork Pouladuff</option>
+                <option value="mondello_june_kylemore.json">Dublin Kylemore</option>
+                <option value="mondello_june_dundalk.json">Dundalk</option>
+                <option value="mondello_june_ennis.json">Ennis</option>
+                <option value="mondello_june_galway.json">Galway</option>
+                <option value="mondello_june_ndc.json">Ireland NDC</option>
+                <option value="mondello_june_kilkenny.json">Kilkenny</option>
+                <option value="mondello_june_letterkenny.json">Letterkenny</option>
+                <option value="mondello_june_limerick.json">Limerick</option>
+                <option value="mondello_june_wexford.json">Longford</option>
+                <option value="mondello_june_naas.json">Naas</option>
+                <option value="mondello_june_navan.json">Navan</option>
+                <option value="mondello_june_nenagh.json">Nenagh</option>
+                <option value="mondello_june_roscommon.json">Roscommon</option>
+                <option value="mondello_june_sandyford.json">Sandyford</option>
+                <option value="mondello_june_skibbereen.json">Skibbereen</option>
+                <option value="mondello_june_sligo.json">Sligo</option>
+                <option value="mondello_june_tullamore.json">Tullamore</option>
+                <option value="mondello_june_waterford.json">Waterford</option>
+                <option value="mondello_june_wexford.json">Wexford</option>
+            </select>
+        </div>
+        <br>
+        <div class="d-flex justify-content-end mb-3 w-100 w-md-50 mx-auto mx-md-0">
+            <select id="sort" class="form-select bg-dark text-white w-100">
+                <option value="percent-desc">% of Target - High to Low (Default)</option>
+                <option value="percent-asc">% of Target - Low to High</option>
+                <option value="average-desc">Average Spend - High to Low</option>
+                <option value="average-asc">Average Spend - Low to High</option>
+            </select>
+        </div>
+        <br>
+        <br>
+        <div id="garage-stats" class="row g-4">
+        </div>
+    </div>
+    <div id="loading-spinner" class="text-center my-4" style="display:none;">
+    <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<div id="error-message" class="text-danger text-center my-3" style="display:none;"></div>
+    <script src="app.js"></script>
+</body>
+</html>
