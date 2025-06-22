@@ -1,51 +1,56 @@
-let currentStats = [];
-let data = null;
-
+// DOM Elements
 const sortSelect = document.getElementById('sort');
 const branchSelect = document.getElementById('branch');
 const spinner = document.getElementById('loading-spinner');
 const errorMessage = document.getElementById('error-message');
+const statsContainer = document.getElementById('garage-stats');
+const lastUpdatedEl = document.getElementById('last-updated');
 
+let data = null;
+let currentStats = [];
+let currentBranch = null;
+
+// Show/hide spinner
 function showSpinner(show) {
     spinner.style.display = show ? 'block' : 'none';
 }
 
+// Show/hide error message
 function showError(message = '') {
     errorMessage.style.display = message ? 'block' : 'none';
     errorMessage.textContent = message;
 }
 
-sortSelect.addEventListener('change', () => {
-    applySortAndRender(sortSelect.value);
-});
+// Populate the branch dropdown
+function populateBranchDropdown(branches) {
+    branchSelect.innerHTML = '<option disabled selected value="">Select Branch</option>';
+    Object.keys(branches).sort().forEach(branchName => {
+        const option = document.createElement('option');
+        option.value = branchName;
+        option.textContent = branchName;
+        branchSelect.appendChild(option);
+    });
+}
 
-branchSelect.addEventListener('change', () => {
-    loadAndRender(branchSelect.value);
-});
-
+// Load JSON data
 async function loadData(filename) {
     const response = await fetch(`data/${filename}`);
-    if (!response.ok) {
-        throw new Error(`Failed to load: ${filename}`);
-    }
+    if (!response.ok) throw new Error(`Failed to load: ${filename}`);
     return await response.json();
 }
 
-function calculateStats(data) {
-    const target = data.target;
-    const dayWeights = data.dayWeights;
-    const currentDay = Object.keys(dayWeights).filter(d => d <= 8);
-    const totalWeight = currentDay.reduce((sum, day) => sum + parseFloat(dayWeights[day]), 0);
+// Calculate statistics
+function calculateStats(branchData, target, dayWeights) {
+    const totalWeight = dayWeights.reduce((sum, w) => sum + parseFloat(w), 0);
 
-    return data.garages.map(garage => {
-        const spend = garage.dailySpend;
+    return branchData.garages.map(garage => {
+        const spend = garage.dailySpend.map(Number);
         const total = spend.reduce((sum, val) => sum + val, 0);
-        const average = total / totalWeight;
+        const average = totalWeight > 0 ? total / totalWeight : 0;
         const highest = Math.max(...spend);
         const lowest = Math.min(...spend);
         const highestIndex = spend.indexOf(highest);
         const lowestIndex = spend.lastIndexOf(lowest);
-
         const remaining = target - total;
         const estDaysToTarget = average > 0 ? Math.ceil(remaining / average) : '∞';
 
@@ -63,6 +68,7 @@ function calculateStats(data) {
     });
 }
 
+// Get progress bar color
 function getColorForPercent(pct) {
     const percent = Math.min(Math.max(pct, 0), 100) / 100;
     let r, g, b;
@@ -80,13 +86,12 @@ function getColorForPercent(pct) {
     return `rgb(${r},${g},${b})`;
 }
 
+// Render stats
 function renderStats(stats, lastUpdated) {
-    const container = document.getElementById('garage-stats');
-    container.innerHTML = '';
+    statsContainer.innerHTML = '';
 
-    const lastUpdatedEl = document.getElementById('last-updated');
     if (lastUpdatedEl) {
-        lastUpdatedEl.textContent = `Last Updated: ${new Date(lastUpdated).toLocaleString()}`;
+        lastUpdatedEl.textContent = `Last Updated: ${new Date(lastUpdated || Date.now()).toLocaleString()}`;
     }
 
     stats.forEach(garage => {
@@ -97,7 +102,7 @@ function renderStats(stats, lastUpdated) {
             <div class="row">
                 <div class="col-12 mb-3 text-center">
                     <h3><b>${garage.name}</b></h3>
-                    <p>Account: ${garage.account}</p>
+                    <p><strong>Site ID : </strong>${garage.account}</p>
                 </div>
                 <div class="col-6 text-center">
                     <p><strong>Lowest Spend:</strong><br> €${garage.lowest.toFixed(2)} (Day ${garage.lowestDay})</p>
@@ -120,25 +125,19 @@ function renderStats(stats, lastUpdated) {
                     </div>
                 </div>
             </div>`;
-        container.appendChild(card);
+        statsContainer.appendChild(card);
     });
 }
 
+// Apply sort and render
 function applySortAndRender(sortValue) {
     let sortedStats = [...currentStats];
+
     switch (sortValue) {
-        case 'percent-desc':
-            sortedStats.sort((a, b) => b.progressPercent - a.progressPercent);
-            break;
-        case 'percent-asc':
-            sortedStats.sort((a, b) => a.progressPercent - b.progressPercent);
-            break;
-        case 'average-desc':
-            sortedStats.sort((a, b) => b.average - a.average);
-            break;
-        case 'average-asc':
-            sortedStats.sort((a, b) => a.average - b.average);
-            break;
+        case 'percent-desc': sortedStats.sort((a, b) => b.progressPercent - a.progressPercent); break;
+        case 'percent-asc': sortedStats.sort((a, b) => a.progressPercent - b.progressPercent); break;
+        case 'average-desc': sortedStats.sort((a, b) => b.average - a.average); break;
+        case 'average-asc': sortedStats.sort((a, b) => a.average - b.average); break;
         case 'eta-asc':
             sortedStats.sort((a, b) => {
                 if (a.estDaysToTarget === '∞') return 1;
@@ -154,52 +153,55 @@ function applySortAndRender(sortValue) {
             });
             break;
     }
+
     renderStats(sortedStats, data.lastUpdated);
 }
 
-let currentLoadId = 0; // global tracker
-
-async function loadAndRender(filename) {
-    const loadId = ++currentLoadId;  // new load id for this call
-
-    showSpinner(true);
+// Unified update function with spinner
+function updateDisplay(callback) {
+    // Clear DOM first
+    statsContainer.innerHTML = '';
+    lastUpdatedEl.textContent = '';
     showError('');
-    document.getElementById('sort').style.display = 'none'; // hide sort by default on new load
+    showSpinner(true);
 
-    const delay = new Promise(resolve => setTimeout(resolve, 1000));
-    const fetchPromise = loadData(filename);
-
-    const results = await Promise.allSettled([fetchPromise, delay]);
-
-    if (loadId !== currentLoadId) {
-        // A newer load started, so ignore this result
-        return;
-    }
-
-    const fetchResult = results[0];
-
-    if (fetchResult.status === 'fulfilled') {
-        data = fetchResult.value;
-        currentStats = calculateStats(data);
-
-        currentStats.sort((a, b) => b.progressPercent - a.progressPercent);
-        document.getElementById('sort').value = 'percent-desc';
-        renderStats(currentStats, data.lastUpdated);
-        document.getElementById('sort').style.display = 'block';
-        showError('');
-    } else {
-        console.error(fetchResult.reason);
-        showError('Data not found.');
-        document.getElementById('garage-stats').innerHTML = '';
-        document.getElementById('last-updated').textContent = '';
-        document.getElementById('sort').style.display = 'none';
-    }
-
-    showSpinner(false);
+    setTimeout(() => {
+        callback();
+        showSpinner(false);
+    }, 1000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const initialBranch = branchSelect.value;
-    document.getElementById('sort').style.display = 'none';
-    loadAndRender(initialBranch);
+// Event listeners
+sortSelect.addEventListener('change', () => {
+    updateDisplay(() => applySortAndRender(sortSelect.value));
+});
+
+branchSelect.addEventListener('change', () => {
+    const selectedBranch = branchSelect.value;
+
+    updateDisplay(() => {
+        if (data && data.branches[selectedBranch]) {
+            currentBranch = selectedBranch;
+            currentStats = calculateStats(data.branches[selectedBranch], data.target, data.dayWeights);
+            applySortAndRender(sortSelect.value);
+            sortSelect.style.display = 'block';
+        } else {
+            showError('Branch data not found.');
+            sortSelect.style.display = 'none';
+        }
+    });
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', async () => {
+    showSpinner(true);
+    showError('');
+    try {
+        data = await loadData('exported_data.json');
+        populateBranchDropdown(data.branches);
+    } catch (error) {
+        console.error(error);
+        showError('Failed to load data.');
+    }
+    showSpinner(false);
 });
